@@ -271,10 +271,8 @@ int conf_read_simple(const char *name, int def)
 		if (in)
 			goto load;
 		sym_add_change_count(1);
-		if (!sym_defconfig_list) {
-			sym_calc_value(modules_sym);
+		if (!sym_defconfig_list)
 			return 1;
-		}
 
 		for_all_defaults(sym_defconfig_list, prop) {
 			if (expr_calc_value(prop->visible.expr) == no ||
@@ -407,7 +405,6 @@ setsym:
 	}
 	free(line);
 	fclose(in);
-	sym_calc_value(modules_sym);
 	return 0;
 }
 
@@ -418,8 +415,12 @@ int conf_read(const char *name)
 
 	sym_set_change_count(0);
 
-	if (conf_read_simple(name, S_DEF_USER))
+	if (conf_read_simple(name, S_DEF_USER)) {
+		sym_calc_value(modules_sym);
 		return 1;
+	}
+
+	sym_calc_value(modules_sym);
 
 	for_all_symbols(i, sym) {
 		sym_calc_value(sym);
@@ -855,6 +856,7 @@ static int conf_split_config(void)
 
 	name = conf_get_autoconfig_name();
 	conf_read_simple(name, S_DEF_AUTO);
+	sym_calc_value(modules_sym);
 
 	if (chdir("include/config"))
 		return 1;
